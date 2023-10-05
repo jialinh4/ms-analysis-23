@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.signal import welch
-from config import plot_settings, data_path, downsampling_rate 
+from config import *
+from acc_noise import *
 
 # Load data
 acc = pd.read_csv(data_path, header=None)
@@ -129,6 +130,83 @@ def plot_fft_denoising():
     plt.draw()
     plt.pause(0.1)
 
+def plot_moving_average():
+    fig, axs = plt.subplots(3, 1, figsize=(16, 8), sharex=True)  # Create subplots with shared x-axis
+    smoothed_x = moving_average(data['x'], **moving_average_settings)
+    smoothed_y = moving_average(data['y'], **moving_average_settings)
+    smoothed_z = moving_average(data['z'], **moving_average_settings)
+    
+    axs[0].plot(data['timestamps'], smoothed_x, label='Smoothed X-axis')
+    axs[1].plot(data['timestamps'], smoothed_y, label='Smoothed Y-axis')
+    axs[2].plot(data['timestamps'], smoothed_z, label='Smoothed Z-axis')
+    
+    axs[0].set_ylabel('Acceleration (1/64 g)')
+    axs[1].set_ylabel('Acceleration (1/64 g)')
+    axs[2].set_ylabel('Acceleration (1/64 g)')
+    
+    axs[0].legend()
+    axs[1].legend()
+    axs[2].legend()
+    
+    axs[2].set_xlabel('Time (seconds)')  # x-label only on the bottom subplot
+    
+    plt.suptitle('Moving Average Smoothed Data')
+    plt.grid(True)
+    plt.draw()
+    plt.pause(0.1)
+
+def plot_wavelet_denoising():
+    fig, axs = plt.subplots(3, 1, figsize=(16, 8), sharex=True)  # Create subplots with shared x-axis
+    denoised_x = wavelet_denoising(data['x'], **wavelet_denoising_settings)
+    denoised_y = wavelet_denoising(data['y'], **wavelet_denoising_settings)
+    denoised_z = wavelet_denoising(data['z'], **wavelet_denoising_settings)
+    
+    axs[0].plot(data['timestamps'], denoised_x, label='Denoised X-axis')
+    axs[1].plot(data['timestamps'], denoised_y, label='Denoised Y-axis')
+    axs[2].plot(data['timestamps'], denoised_z, label='Denoised Z-axis')
+    
+    axs[0].set_ylabel('Acceleration (1/64 g)')
+    axs[1].set_ylabel('Acceleration (1/64 g)')
+    axs[2].set_ylabel('Acceleration (1/64 g)')
+    
+    axs[0].legend()
+    axs[1].legend()
+    axs[2].legend()
+    
+    axs[2].set_xlabel('Time (seconds)')  # x-label only on the bottom subplot
+    
+    plt.suptitle('Wavelet Denoised Data')
+    plt.grid(True)
+    plt.draw()
+    plt.pause(0.1)
+
+def plot_bwf():
+    fig, axs = plt.subplots(3, 1, figsize=(16, 8), sharex=True)  # Create subplots with shared x-axis
+    np_x = data['x'].to_numpy()
+    np_y = data['y'].to_numpy()
+    np_z = data['z'].to_numpy()
+    np_ts = data['timestamps'].to_numpy()
+    frequency = 1 / (np_ts[1] - np_ts[0])  # Assuming evenly spaced timestamps
+    
+    axs[0].plot(np_ts, bwf(np_x, frequency), label='Filtered X')
+    axs[1].plot(np_ts, bwf(np_y, frequency), label='Filtered Y')
+    axs[2].plot(np_ts, bwf(np_z, frequency), label='Filtered Z')
+    
+    axs[0].set_ylabel('Acceleration (1/64 g)')
+    axs[1].set_ylabel('Acceleration (1/64 g)')
+    axs[2].set_ylabel('Acceleration (1/64 g)')
+    
+    axs[0].legend()
+    axs[1].legend()
+    axs[2].legend()
+    
+    axs[2].set_xlabel('Time (seconds)')  # x-label only on the bottom subplot
+    
+    plt.suptitle('Butterworth Filtered Data')
+    plt.grid(True)
+    plt.draw()
+    plt.pause(0.1)
+
 
 if __name__ == "__main__":
     # Check configuration and generate requested plots
@@ -144,5 +222,12 @@ if __name__ == "__main__":
         plot_spectral_density()
     if plot_settings.get("fft_denoising", False):
         plot_fft_denoising()
-    plt.pause(0.001)  # Add this line at the end
+    if plot_settings.get("moving_average", False):
+        plot_moving_average()
+    if plot_settings.get("wavelet_denoising", False):
+        plot_wavelet_denoising()
+    if plot_settings.get("bwf", False):
+        plot_bwf()
+
+    plt.pause(0.001)
     input("Press [enter] to close the plots.")
