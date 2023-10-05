@@ -2,11 +2,11 @@
 data_path = 'sample_data/acc.csv'
 
 plot_settings = {
-    "time_series": False,
-    "three_d": False,
-    "frequency_domain": False,
-    "histogram": False,
-    "spectral_density": False,
+    "time_series": True,
+    "three_d": True,
+    "frequency_domain": True,
+    "histogram": True,
+    "spectral_density": True,
     "fft_denoising": True,
     "moving_average": True,
     "wavelet_denoising": True,
