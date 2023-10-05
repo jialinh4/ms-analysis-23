@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.signal import welch
-from config import plot_settings, data_path
+from config import plot_settings, data_path, downsampling_rate 
 
 # Load data
 acc = pd.read_csv(data_path, header=None)
@@ -14,15 +14,26 @@ data = data.apply(lambda x:x/64, axis=0)
 data.columns = ['x', 'y', 'z']
 data['timestamps'] = np.arange(data.shape[0])/frequency
 
+# Downsample data
+data = data[::downsampling_rate] 
+
 def plot_time_series():
-    plt.figure(figsize=(10, 6))
-    plt.plot(data['timestamps'], data['x'], label='X-axis')
-    plt.plot(data['timestamps'], data['y'], label='Y-axis')
-    plt.plot(data['timestamps'], data['z'], label='Z-axis')
-    plt.title('3-axis Accelerometer Data')
-    plt.xlabel('Time (seconds)')
-    plt.ylabel('Acceleration (1/64 g)')
-    plt.legend()
+    fig, axs = plt.subplots(3, 1, figsize=(16, 8), sharex=True)  # Create subplots with shared x-axis
+    axs[0].plot(data['timestamps'], data['x'], label='X-axis')
+    axs[1].plot(data['timestamps'], data['y'], label='Y-axis')
+    axs[2].plot(data['timestamps'], data['z'], label='Z-axis')
+
+    axs[0].set_ylabel('Acceleration (1/64 g)')
+    axs[1].set_ylabel('Acceleration (1/64 g)')
+    axs[2].set_ylabel('Acceleration (1/64 g)')
+
+    axs[0].legend()
+    axs[1].legend()
+    axs[2].legend()
+
+    axs[2].set_xlabel('Time (seconds)')  # x-label only on the bottom subplot
+
+    plt.suptitle('3-axis Accelerometer Data')  # Super title for the whole figure
     plt.grid(True)
     plt.draw()
     plt.pause(0.1)
@@ -30,14 +41,13 @@ def plot_time_series():
 def plot_three_d():
     fig = plt.figure(figsize=(10, 6))
     ax = fig.add_subplot(111, projection='3d')
-    ax.plot(data['x'], data['y'], [0]*len(data), color='red', label='X-axis')  # Red color for X-axis
-    ax.plot(data['x'], [0]*len(data), data['z'], color='green', label='Y-axis')  # Green color for Y-axis
-    ax.plot([0]*len(data), data['y'], data['z'], color='blue', label='Z-axis')  # Blue color for Z-axis
+    t = np.linspace(0, 1, len(data))
+    sc = ax.scatter(data['x'], data['y'], data['z'], c=t, cmap='viridis', s=1)  # Color-encoded scatter plot
     ax.set_title('3D Path of Accelerometer Data')
     ax.set_xlabel('X-axis')
     ax.set_ylabel('Y-axis')
     ax.set_zlabel('Z-axis')
-    ax.legend()
+    plt.colorbar(sc, label='Normalized Time')
     plt.draw()
     plt.pause(0.1)
 
@@ -134,4 +144,5 @@ if __name__ == "__main__":
         plot_spectral_density()
     if plot_settings.get("fft_denoising", False):
         plot_fft_denoising()
-    plt.show()
+    plt.pause(0.001)  # Add this line at the end
+    input("Press [enter] to close the plots.")
