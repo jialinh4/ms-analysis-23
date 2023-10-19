@@ -21,5 +21,8 @@ def wavelet_denoising(data, threshold=0.2, wavelet='db8', level=6):
     coeffs_thresholded = [pywt.threshold(c, threshold, mode='soft') for c in coeffs]
     return pywt.waverec(coeffs_thresholded, wavelet)
 
-
-
+def get_summed_moving_average(data, window_size):
+    data['x_processed'] = moving_average(data['x'], window_size)
+    data['y_processed'] = moving_average(data['y'], window_size)
+    data['z_processed'] = moving_average(data['z'], window_size)
+    return data['x_processed'] + data['y_processed'] + data['z_processed']

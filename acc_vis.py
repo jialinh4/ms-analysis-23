@@ -5,7 +5,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from scipy.signal import welch
 from config import *
 from acc_noise import *
-from acc_seg import segment_data
+from acc_seg import *
 
 
 # Load data
@@ -261,11 +261,11 @@ def plot_segments_with_moving_average():
     # Identify significant changes in XYZ data and mark the segments
     threshold = activity_threshold  # This should be imported from your config file
     for i in range(1, len(data)):
-        if abs(data['x_processed'].iloc[i] - data['x_processed'].iloc[i-1]) > activity_threshold:
+        if abs(data['x_processed'].iloc[i] - data['x_processed'].iloc[i-1]) > activity_threshold_with_moving_average:
             axs[0].axvline(x=data['timestamps'].iloc[i], color='r', linestyle='--')
-        if abs(data['y_processed'].iloc[i] - data['y_processed'].iloc[i-1]) > activity_threshold:
+        if abs(data['y_processed'].iloc[i] - data['y_processed'].iloc[i-1]) > activity_threshold_with_moving_average:
             axs[1].axvline(x=data['timestamps'].iloc[i], color='r', linestyle='--')
-        if abs(data['z_processed'].iloc[i] - data['z_processed'].iloc[i-1]) > activity_threshold:
+        if abs(data['z_processed'].iloc[i] - data['z_processed'].iloc[i-1]) > activity_threshold_with_moving_average:
             axs[2].axvline(x=data['timestamps'].iloc[i], color='r', linestyle='--')
     
     axs[0].set_ylabel('Acceleration (1/64 g)')
@@ -279,6 +279,30 @@ def plot_segments_with_moving_average():
     axs[2].set_xlabel('Time (seconds)')
 
     plt.suptitle('3-axis Accelerometer Data with Activity Segments [moving_average]')
+    plt.grid(True)
+    plt.draw()
+    plt.pause(0.1)
+
+# oscillation
+def plot_oscillation_segmentation():
+    # Process and sum the data
+    summed_data = get_summed_moving_average(data, **moving_average_settings)
+    
+    # Detect oscillations
+    oscillation_periods = detect_oscillations(summed_data)
+    
+    # Plot
+    plt.figure(figsize=(16, 8))
+    plt.plot(data['timestamps'], summed_data, label='Summed Processed Data')
+    
+    # Highlight oscillation periods
+    for start, end in oscillation_periods:
+        plt.axvspan(data['timestamps'][start], data['timestamps'][end], color='yellow', alpha=0.3)
+    
+    plt.title('Oscillation Segments on Summed Processed Data')
+    plt.xlabel('Time')
+    plt.ylabel('Acceleration')
+    plt.legend()
     plt.grid(True)
     plt.draw()
     plt.pause(0.1)
@@ -308,6 +332,8 @@ if __name__ == "__main__":
         plot_segments()
     if plot_settings.get("segmentation_with_moving_average", False):
         plot_segments_with_moving_average()
+    if plot_settings.get("oscillation_segmentation", False):
+        plot_oscillation_segmentation()
 
     plt.pause(0.001)
     input("Press [enter] to close the plots.")

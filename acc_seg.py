@@ -1,18 +1,30 @@
-from config import activity_threshold
-from numpy.linalg import norm
+import numpy as np
+from scipy.signal import find_peaks
+from config import *
 
-def segment_data(data):
-    segments = []
-    segment_start = 0
-    for i in range(1, len(data)):
-        current_magnitude = norm([data['x'].iloc[i], data['y'].iloc[i], data['z'].iloc[i]])
-        previous_magnitude = norm([data['x'].iloc[i-1], data['y'].iloc[i-1], data['z'].iloc[i-1]])
-        delta = abs(current_magnitude - previous_magnitude)
+def detect_oscillations(data):
+    # Finding peaks (maxima)
+    peaks, _ = find_peaks(data)
+    # Finding valleys (minima)
+    valleys, _ = find_peaks(-data)
+    
+    # Combining and sorting all turning points
+    turning_points = np.sort(np.concatenate((peaks, valleys)))
+    
+    oscillation_periods = []
+    start_oscillation = None
+    
+    # Sliding window and compute variability measure
+    for i in range(len(turning_points) - 1):
+        start, end = turning_points[i], turning_points[i+1]
+        window_data = data[start:end]
         
-        if delta > activity_threshold:
-            segments.append(data.iloc[segment_start:i])
-            segment_start = i
-            
-    # Appending the last segment
-    segments.append(data.iloc[segment_start:])
-    return segments
+        if np.std(window_data) > variability_threshold:
+            if start_oscillation is None:  # start of an oscillation
+                start_oscillation = start
+        else:
+            if start_oscillation is not None:  # end of oscillation
+                oscillation_periods.append((start_oscillation, end))
+                start_oscillation = None
+                
+    return oscillation_periods

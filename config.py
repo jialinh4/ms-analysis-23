@@ -16,7 +16,9 @@ plot_settings = {
     "bwf": False,
     # segmentation
     "segmentation": True,
-    "segmentation_with_moving_average": False,
+    "segmentation_with_moving_average": True,
+    # oscillation
+    "oscillation_segmentation": True,
 }
 
 # downsampling for raw data
@@ -40,3 +42,7 @@ wavelet_denoising_settings = {
 
 # threshold for significant change
 activity_threshold = 0.6
+activity_threshold_with_moving_average = 0.05
+
+# oscillation
+variability_threshold = 0.2
