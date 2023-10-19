@@ -5,6 +5,8 @@ from mpl_toolkits.mplot3d import Axes3D
 from scipy.signal import welch
 from config import *
 from acc_noise import *
+from acc_seg import segment_data
+
 
 # Load data
 acc = pd.read_csv(data_path, header=None)
@@ -18,6 +20,7 @@ data['timestamps'] = np.arange(data.shape[0])/frequency
 # Downsample data
 data = data[::downsampling_rate] 
 
+# vis for raw data
 def plot_time_series():
     fig, axs = plt.subplots(3, 1, figsize=(16, 8), sharex=True)
     axs[0].plot(data['timestamps'], data['x'], label='X-axis')
@@ -39,6 +42,7 @@ def plot_time_series():
     plt.draw()
     plt.pause(0.1)
 
+# useful vis functions
 def plot_three_d():
     fig = plt.figure(figsize=(10, 6))
     ax = fig.add_subplot(111, projection='3d')
@@ -98,6 +102,7 @@ def plot_spectral_density():
     plt.draw()
     plt.pause(0.1)
 
+# denoising
 def fft(col, n_components):
     n = len(col)
     # compute the fft
@@ -207,6 +212,77 @@ def plot_bwf():
     plt.draw()
     plt.pause(0.1)
 
+# segmentation
+def plot_segments():
+    fig, axs = plt.subplots(3, 1, figsize=(16, 8), sharex=True)
+    
+    # Plotting the XYZ data
+    axs[0].plot(data['timestamps'], data['x'], label='X-axis')
+    axs[1].plot(data['timestamps'], data['y'], label='Y-axis')
+    axs[2].plot(data['timestamps'], data['z'], label='Z-axis')
+    
+    # Identify significant changes in XYZ data and mark the segments
+    threshold = activity_threshold  # This should be imported from your config file
+    for i in range(1, len(data)):
+        if abs(data['x'].iloc[i] - data['x'].iloc[i-1]) > threshold:
+            axs[0].axvline(x=data['timestamps'].iloc[i], color='r', linestyle='--')
+        if abs(data['y'].iloc[i] - data['y'].iloc[i-1]) > threshold:
+            axs[1].axvline(x=data['timestamps'].iloc[i], color='r', linestyle='--')
+        if abs(data['z'].iloc[i] - data['z'].iloc[i-1]) > threshold:
+            axs[2].axvline(x=data['timestamps'].iloc[i], color='r', linestyle='--')
+    
+    axs[0].set_ylabel('Acceleration (1/64 g)')
+    axs[1].set_ylabel('Acceleration (1/64 g)')
+    axs[2].set_ylabel('Acceleration (1/64 g)')
+
+    axs[0].legend()
+    axs[1].legend()
+    axs[2].legend()
+
+    axs[2].set_xlabel('Time (seconds)')
+
+    plt.suptitle('3-axis Accelerometer Data with Activity Segments')
+    plt.grid(True)
+    plt.draw()
+    plt.pause(0.1)
+
+def plot_segments_with_moving_average():
+    fig, axs = plt.subplots(3, 1, figsize=(16, 8), sharex=True)
+    
+    data['x_processed'] = moving_average(data['x'], **moving_average_settings)
+    data['y_processed'] = moving_average(data['y'], **moving_average_settings)
+    data['z_processed'] = moving_average(data['z'], **moving_average_settings)
+
+    # Plotting the XYZ data
+    axs[0].plot(data['timestamps'], data['x_processed'], label='X-axis Processed')
+    axs[1].plot(data['timestamps'], data['y_processed'], label='Y-axis Processed')
+    axs[2].plot(data['timestamps'], data['z_processed'], label='Z-axis Processed')
+    
+    # Identify significant changes in XYZ data and mark the segments
+    threshold = activity_threshold  # This should be imported from your config file
+    for i in range(1, len(data)):
+        if abs(data['x_processed'].iloc[i] - data['x_processed'].iloc[i-1]) > activity_threshold:
+            axs[0].axvline(x=data['timestamps'].iloc[i], color='r', linestyle='--')
+        if abs(data['y_processed'].iloc[i] - data['y_processed'].iloc[i-1]) > activity_threshold:
+            axs[1].axvline(x=data['timestamps'].iloc[i], color='r', linestyle='--')
+        if abs(data['z_processed'].iloc[i] - data['z_processed'].iloc[i-1]) > activity_threshold:
+            axs[2].axvline(x=data['timestamps'].iloc[i], color='r', linestyle='--')
+    
+    axs[0].set_ylabel('Acceleration (1/64 g)')
+    axs[1].set_ylabel('Acceleration (1/64 g)')
+    axs[2].set_ylabel('Acceleration (1/64 g)')
+
+    axs[0].legend()
+    axs[1].legend()
+    axs[2].legend()
+
+    axs[2].set_xlabel('Time (seconds)')
+
+    plt.suptitle('3-axis Accelerometer Data with Activity Segments [moving_average]')
+    plt.grid(True)
+    plt.draw()
+    plt.pause(0.1)
+
 
 if __name__ == "__main__":
     # Check configuration and generate requested plots
@@ -228,6 +304,10 @@ if __name__ == "__main__":
         plot_wavelet_denoising()
     if plot_settings.get("bwf", False):
         plot_bwf()
+    if plot_settings.get("segmentation", False):
+        plot_segments()
+    if plot_settings.get("segmentation_with_moving_average", False):
+        plot_segments_with_moving_average()
 
     plt.pause(0.001)
     input("Press [enter] to close the plots.")

@@ -1,21 +1,28 @@
 # config.py
-data_path = 'sample_data/acc.csv'
+data_path = 'CHI_Study_000/000000_210603-191049/ACC.csv'
 
 plot_settings = {
-    "time_series": True,
-    "three_d": True,
-    "frequency_domain": True,
-    "histogram": True,
-    "spectral_density": True,
-    "fft_denoising": True,
-    "moving_average": True,
-    "wavelet_denoising": True,
-    "bwf": True,
+    # vis for raw data
+    "time_series": False,
+    # useful vis functions
+    "three_d": False,
+    "frequency_domain": False,
+    "histogram": False,
+    "spectral_density": False,
+    # denoising
+    "fft_denoising": False,
+    "moving_average": False,
+    "wavelet_denoising": False,
+    "bwf": False,
+    # segmentation
+    "segmentation": True,
+    "segmentation_with_moving_average": False,
 }
 
+# downsampling for raw data
 downsampling_rate = 1
 
-# Noise Processing Settings
+# noise processing settings
 lowpass_settings = {
     "cutoff": 1,
     "order": 5
@@ -30,3 +37,6 @@ wavelet_denoising_settings = {
     "wavelet": 'db8',
     "level": 6
 }
+
+# threshold for significant change
+activity_threshold = 0.6
